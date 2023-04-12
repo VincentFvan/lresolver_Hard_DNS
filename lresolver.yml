@@ -1,8 +1,10 @@
-bind: 127.0.0.1:5300
-cache: true
-negative_cache: true
+bind: 127.0.0.1:53
+cache: false
+negative_cache: false
 max_cache_ttl: 300
-tcp: true
+tcp: false
 nameservers:
-- 8.8.8.8
-- 8.8.4.4
+- 192.168.10.246
+- 192.168.10.247
+- 192.168.10.151
+- 192.168.10.228

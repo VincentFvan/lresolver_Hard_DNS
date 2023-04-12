@@ -59,7 +59,7 @@ func main() {
 		viper.SetConfigFile(config)
 	} else {
 		viper.SetConfigName("lresolver")
-		viper.AddConfigPath("/etc/lresolver/")
+		// viper.AddConfigPath("/etc/lresolver/")
 		viper.AddConfigPath(".")
 	}
 

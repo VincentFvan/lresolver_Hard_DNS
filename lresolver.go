@@ -2,7 +2,11 @@ package main
 
 import (
 	"container/ring"
+	"fmt"
+	"log"
+	"math/rand"
 	"net"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -150,42 +154,77 @@ func getTransports() []string {
 
 func directResolve(req *dns.Msg, transport string, nameserver string) (*dns.Msg, error) {
 	client := &dns.Client{Net: transport}
-	glog.Infoln("trying to resolv", req.Question, "using", nameserver)
+
+	// 加上CD flag，取消DNSSEC验证
+	req.MsgHdr.CheckingDisabled = true
 	in, _, err := client.Exchange(req, nameserver)
+
+	fmt.Println("trying to resolve", req.Question, "using", nameserver, "result", in.String())
 	return in, err
 }
 
 func broadcastResolve(req *dns.Msg, transport string, usedns string) (*dns.Msg, error) {
-	total := len(servers.slist) - 1
+	total := len(servers.slist)
 	resp := make([]*dns.Msg, total)
 	errs := make([]error, total)
 	var wg sync.WaitGroup
 	actual := 0
 	for _, nameserver := range servers.slist {
-		if nameserver == usedns {
-			// skip already used nameserver
-			glog.Infoln("used nameserver", usedns, "skipping", nameserver)
-			continue
-		}
+		// if nameserver == usedns {
+		// 	// skip already used nameserver
+		// 	glog.Infoln("used nameserver", usedns, "skipping", nameserver)
+		// 	continue
+		// }
 		wg.Add(1)
 		go func(pos int, ns string) {
 			defer wg.Done()
 			in, err := directResolve(req, transport, ns)
 			resp[pos] = in
 			errs[pos] = err
+
 		}(actual, nameserver)
 		actual++
 	}
 	// wait all to finish
 	wg.Wait()
 	// return first valid no-error response
+
+	rand.Seed(time.Now().UnixNano())
+	numbers := make([]int, total)
+
+	log.SetFlags(log.Ltime | log.Lmicroseconds)
+	log.Println("start computing simulation")
+	// 模拟遍历结果（只需要k+1个）
+	for i := 0; i < total; i++ {
+		// fmt.Println(resp[i].String())
+
+		// DepenDNS需要加上的计算步骤
+		num1 := rand.Intn(100)
+		num2 := rand.Intn(100)
+
+		numbers = append(numbers, num1)
+		numbers = append(numbers, num2)
+
+	}
+
+	// (1) 生成2k个随机数，然后排序
+	sort.Ints(numbers)
+
+	// TODO: (2) 加上一个查找数据库的时间（和我们实验查区块链一样）
+	log.Println("finish computing simulation", numbers)
+
 	erroridx := 0
 	for i := 0; i < total; i++ {
 		if errs[i] == nil && !isError(resp[i]) {
 			return resp[i], nil
 		}
 		erroridx = i
+
 	}
+
+	// fmt.Println("test1")
+
+	// fmt.Println("return broadcast resolve", resp[erroridx].String())
 	return resp[erroridx], errs[erroridx]
 }
 
@@ -211,12 +250,15 @@ func resolve(w dns.ResponseWriter, req *dns.Msg) {
 			transport = "tcp"
 		}
 		var err error
-		var nameserver = getNameServer()
-		in, err = directResolve(req, transport, nameserver)
+		// var nameserver = getNameServer()
+		// fmt.Println("test get nameserver", nameserver)
+
+		// in, err = directResolve(req, transport, nameserver)
 		// check for connection error or NXDOMAIN
-		if (err != nil || isError(in)) && servers.canBroadcast {
+		// if (err != nil || isError(in)) && servers.canBroadcast {
+		if servers.canBroadcast {
 			// check all nameservers for
-			in, err = broadcastResolve(req, transport, nameserver)
+			in, err = broadcastResolve(req, transport, "")
 			if err != nil {
 				// we got network error from all servers ()
 				dns.HandleFailed(w, req)
