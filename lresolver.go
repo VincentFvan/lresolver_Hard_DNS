@@ -195,7 +195,7 @@ func broadcastResolve(req *dns.Msg, transport string, usedns string) (*dns.Msg, 
 	log.Println("start computing simulation")
 	// 模拟遍历结果（只需要k+1个）
 	for i := 0; i < total; i++ {
-		fmt.Println(resp[i].String())
+		// fmt.Println(resp[i].String())
 
 		// DepenDNS需要加上的计算步骤
 		// num1 := rand.Intn(100)
