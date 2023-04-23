@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -189,28 +190,30 @@ func broadcastResolve(req *dns.Msg, transport string, usedns string) (*dns.Msg, 
 	// return first valid no-error response
 
 	rand.Seed(time.Now().UnixNano())
-	// numbers := make([]int, total)
+	numbers := make([]int, total)
 
 	log.SetFlags(log.Ltime | log.Lmicroseconds)
 	log.Println("start computing simulation")
 	// 模拟遍历结果（只需要k+1个）
 	for i := 0; i < total; i++ {
-		// fmt.Println(resp[i].String())
+		fmt.Println(resp[i].String())
 
-		// DepenDNS需要加上的计算步骤
-		// num1 := rand.Intn(100)
-		// num2 := rand.Intn(100)
+		//DepenDNS需要加上的计算步骤
+		num1 := rand.Intn(100)
+		num2 := rand.Intn(100)
 
-		// numbers = append(numbers, num1)
-		// numbers = append(numbers, num2)
+		numbers = append(numbers, num1)
+		numbers = append(numbers, num2)
 
 	}
 
-	// // (1) 生成2k个随机数，然后排序
-	// sort.Ints(numbers)
+	// (1) 生成2k个随机数，然后排序
+	sort.Ints(numbers)
 
-	// // TODO: (2) 加上一个查找数据库的时间（和我们实验查区块链一样）
-	// log.Println("finish computing simulation", numbers)
+	// TODO: (2) 加上一个查找数据库的时间（和我们实验查区块链一样）
+
+	time.Sleep(time.Millisecond * 20)
+	log.Println("finish computing simulation", numbers)
 
 	erroridx := 0
 	for i := 0; i < total; i++ {
